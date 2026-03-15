@@ -8,15 +8,11 @@ import React, {
   useContext,
 } from 'react';
 
-import Left from './components/Left';
-import Main from './components/Main';
-import Botom from './components/Botom';
+import Layout from './components/Layout';
 
 export default function Home() {
 
   return (
-    <div>
-      <h1>Welcome to Fluentor Agent</h1>
-    </div>
+    <Layout />
   );
 }
