@@ -4,7 +4,6 @@ import { ClerkProvider } from '@clerk/nextjs';
 import Providers from './providers';
 import { clerkAppearance } from './lib/clerkAppearance';
 import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata = {
   title: 'Fluentor Agent',
@@ -20,7 +19,6 @@ export default function RootLayout({ children }) {
             <ClerkProvider appearance={clerkAppearance}>
               {children}
               <Analytics />
-              <SpeedInsights />
             </ClerkProvider>
           </Providers>
         </GlobalProvider>

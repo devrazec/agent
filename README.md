@@ -49,6 +49,8 @@ npm i -S @clerk/nextjs@latest @clerk/backend@latest
 
 --  Vercel
 
-npm i -S @vercel/analytics @vercel/speed-insights
+npm i -S @vercel/analytics
+
+npm remove @vercel/speed-insights
 
 ```
