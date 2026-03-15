@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Paper from '@mui/material/Paper';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
@@ -20,8 +19,9 @@ const navItems = [
 ];
 
 export default function Bottom() {
-  const [value, setValue] = useState(0);
+  const pathname = usePathname();
   const router = useRouter();
+  const activeIndex = navItems.findIndex(({ href }) => href === pathname);
 
   return (
     <Paper
@@ -37,14 +37,22 @@ export default function Bottom() {
     >
       <BottomNavigation
         showLabels
-        value={value}
-        onChange={(_, newValue) => {
-          setValue(newValue);
-          router.push(navItems[newValue].href);
-        }}
+        value={activeIndex}
+        onChange={(_, newValue) => router.push(navItems[newValue].href)}
       >
         {navItems.map(({ label, icon }) => (
-          <BottomNavigationAction key={label} label={label} icon={icon} />
+          <BottomNavigationAction
+            key={label}
+            label={label}
+            icon={icon}
+            sx={{
+              '&.Mui-selected': {
+                backgroundColor: 'primary.main',
+                color: 'primary.contrastText',
+                '& .MuiSvgIcon-root': { color: 'primary.contrastText' },
+              },
+            }}
+          />
         ))}
       </BottomNavigation>
     </Paper>

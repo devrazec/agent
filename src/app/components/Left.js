@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -26,6 +27,8 @@ const mainNavItems = [
 ];
 
 export default function Left() {
+    const pathname = usePathname();
+
     return (
         <Drawer
             variant="permanent"
@@ -43,7 +46,19 @@ export default function Left() {
             <List>
                 {mainNavItems.map(({ text, icon, href }) => (
                     <ListItem key={text} disablePadding>
-                        <ListItemButton component={Link} href={href}>
+                        <ListItemButton
+                            component={Link}
+                            href={href}
+                            selected={pathname === href}
+                            sx={{
+                                '&.Mui-selected': {
+                                    backgroundColor: 'primary.main',
+                                    color: 'primary.contrastText',
+                                    '& .MuiListItemIcon-root': { color: 'primary.contrastText' },
+                                    '&:hover': { backgroundColor: 'primary.dark' },
+                                },
+                            }}
+                        >
                             <ListItemIcon>{icon}</ListItemIcon>
                             <ListItemText primary={text} />
                         </ListItemButton>
