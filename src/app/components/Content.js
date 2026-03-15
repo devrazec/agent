@@ -14,19 +14,31 @@ export default function Content({ children }) {
       component="main"
       sx={{
         flexGrow: 1,
-        p: 3,
-        pb: { xs: `${BOTTOM_NAV_HEIGHT + 24}px`, md: 3 },
-        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'hidden',
       }}
     >
-      <Toolbar />
-      {children ?? (
-        <>
+      <Toolbar sx={{ flexShrink: 0 }} />
+      {children ? (
+        <Box sx={{ flexGrow: 1, minHeight: 0 }}>
+          {children}
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            flexGrow: 1,
+            overflowY: 'auto',
+            p: 3,
+            pb: { xs: `${BOTTOM_NAV_HEIGHT + 24}px`, md: 3 },
+          }}
+        >
           <Typography variant="h5" gutterBottom fontWeight={600}>
             Dashboard
           </Typography>
           <Grid container spacing={3}>
-            {['Overview', 'Activity', 'Reports', 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks'].map((title) => (
+            {['Overview', 'Activity', 'Reports', 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks' , 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks',, 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks', , 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks',, 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks', 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks', 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks'].map((title) => (
               <Grid key={title} size={{ xs: 12, sm: 6, md: 3 }}>
                 <Paper sx={{ p: 3, borderRadius: 2 }} elevation={1}>
                   <Typography variant="subtitle1" fontWeight={500}>
@@ -39,7 +51,7 @@ export default function Content({ children }) {
               </Grid>
             ))}
           </Grid>
-        </>
+        </Box>
       )}
     </Box>
   );

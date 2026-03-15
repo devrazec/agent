@@ -47,9 +47,9 @@ export default function Bottom() {
             icon={icon}
             sx={{
               '&.Mui-selected': {
-                backgroundColor: 'primary.main',
-                color: 'primary.contrastText',
-                '& .MuiSvgIcon-root': { color: 'primary.contrastText' },
+                backgroundColor: '#00a76f1f',
+                color: 'primary.main',
+                '& .MuiSvgIcon-root': { color: 'primary.main' },
               },
             }}
           />

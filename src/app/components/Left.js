@@ -52,10 +52,11 @@ export default function Left() {
                             selected={pathname === href}
                             sx={{
                                 '&.Mui-selected': {
-                                    backgroundColor: 'primary.main',
-                                    color: 'primary.contrastText',
-                                    '& .MuiListItemIcon-root': { color: 'primary.contrastText' },
-                                    '&:hover': { backgroundColor: 'primary.dark' },
+                                    
+                                    backgroundColor: '#00a76f1f',
+                                    color: 'primary.main',
+                                    '& .MuiListItemIcon-root': { color: 'primary.main' },
+                                    '&:hover': { backgroundColor: '#00a76f33' },
                                 },
                             }}
                         >
