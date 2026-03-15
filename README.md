@@ -36,7 +36,6 @@ context
 lib
 providers.js
 
-
 -- Run commands
 
 npm run format
@@ -53,4 +52,16 @@ npm i -S @vercel/analytics
 
 npm remove @vercel/speed-insights
 
+-- Azure Voice Live Universal Assistant
+
+npm i -S @azure/ai-voicelive
+npm i -S @azure/core-auth
+npm i -S @azure/identity
+
 ```
+
+# Azure Voice Live Universal Assistant
+
+https://ai.azure.com/build/playground/speech?tid=58e31257-f77f-4d58-9705-d0b6ea0f9ee4&connectionName=ai-22018517938ai439064380067&wsid=/subscriptions/3cd4d0fd-b0ac-4e13-a6d1-6a970f3f4f91/resourceGroups/rg-Voice-Live/providers/Microsoft.MachineLearningServices/workspaces/voice-live
+
+https://learn.microsoft.com/en-us/azure/ai-services/speech-service/voice-live
