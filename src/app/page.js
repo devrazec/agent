@@ -7,25 +7,12 @@ import React, {
   useEffect,
   useContext,
 } from 'react';
-import { GlobalContext } from '../context/GlobalContext';
-import Link from 'next/link';
+
+import Left from './components/Left';
+import Main from './components/Main';
+import Botom from './components/Botom';
 
 export default function Home() {
-
-  const { darkMode, setDarkMode, mobileDevice, setMobileDevice } = useContext(GlobalContext);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setMobileDevice(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize();
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [setMobileDevice]);
 
   return (
     <div>

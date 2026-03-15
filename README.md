@@ -30,7 +30,12 @@ npm i -S @mui/material @emotion/react @emotion/styled @mui/icons-material
 -- Copy files to root / folder
 .npmrc
 
--- Copy files to /src/app/context
+-- Copy files/folder to /src/app/
+
+context
+lib
+providers.js
+
 
 -- Run commands
 
