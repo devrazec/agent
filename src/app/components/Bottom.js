@@ -23,6 +23,9 @@ export default function Bottom() {
   const router = useRouter();
   const activeIndex = navItems.findIndex(({ href }) => href === pathname);
 
+  const hiddenOn = ['/pages/Speak'];
+  if (hiddenOn.includes(pathname)) return null;
+
   return (
     <Paper
       sx={{

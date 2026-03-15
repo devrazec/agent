@@ -9,14 +9,55 @@ import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
 import MicIcon from '@mui/icons-material/Mic';
-import ReplayIcon from '@mui/icons-material/Replay';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import TranslateIcon from '@mui/icons-material/Translate';
-import Top from '../../components/Top';
-import Left from '../../components/Left';
+import Layout from '../../components/Layout';
+
+const BOTTOM_NAV_HEIGHT = 56;
 
 const initialMessages = [
   {
     id: 1,
+    role: 'assistant',
+    text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+  },
+  {
+    id: 2,
+    role: 'user',
+    text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+  },
+  {
+    id: 3,
+    role: 'assistant',
+    text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+  },
+  {
+    id: 4,
+    role: 'assistant',
+    text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+  },
+  {
+    id: 5,
+    role: 'user',
+    text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+  },
+  {
+    id: 6,
+    role: 'assistant',
+    text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+  },
+  {
+    id: 7,
+    role: 'user',
+    text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+  },
+  {
+    id: 8,
+    role: 'user',
+    text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+  },
+  {
+    id: 9,
     role: 'assistant',
     text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
   },
@@ -47,23 +88,15 @@ export default function SpeakPage() {
   };
 
   return (
-    // Layout: row for desktop, column for mobile
-    <Box sx={{ display: 'flex', flexDirection: mobileDevice ? 'column' : 'row', height: '100vh', minHeight: 0 }}>
-      {/* Left panel for desktop */}
-      {!mobileDevice && (
-        <Left />
-      )}
-      {/* Main content area */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minWidth: 0 }}>
-        <Top />
+    <Layout>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Messages area */}
         <Box
           sx={{
             flexGrow: 1,
             overflowY: 'auto',
-            px: 2,
-            py: 1,
-            mt: { xs: '56px', sm: '64px' }, // Add margin top for AppBar height
+            p: 3,
+            pb: { xs: `${BOTTOM_NAV_HEIGHT + 24}px`, md: 3 },
           }}
         >
           {messages.map((msg) => (
@@ -76,88 +109,104 @@ export default function SpeakPage() {
                 mb: 2,
               }}
             >
-            {msg.role === 'assistant' && (
-              <>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    px: 2,
-                    py: 1.5,
-                    maxWidth: '75%',
-                    borderRadius: 3,
-                    backgroundColor: 'action.hover',
-                  }}
-                >
-                  <Typography variant="body2">{msg.text}</Typography>
-                </Paper>
-                <Box sx={{ display: 'flex', flexDirection: 'column', ml: 1, mt: 0.5, gap: 0.5 }}>
-                  <Tooltip title="Regenerate">
-                    <IconButton size="small">
-                      <ReplayIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Translate">
-                    <IconButton size="small">
-                      <TranslateIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </>
-            )}
-            {msg.role === 'user' && (
-              <Paper
-                elevation={0}
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  maxWidth: '75%',
-                  borderRadius: 3,
-                  backgroundColor: 'primary.main',
-                  color: 'primary.contrastText',
-                }}
-              >
-                <Typography variant="body2">{msg.text}</Typography>
-              </Paper>
-            )}
-          </Box>
-        ))}
-        <div ref={bottomRef} />
-      </Box>
+              {msg.role === 'assistant' && (
+                <>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      flexGrow: 1,
+                      borderRadius: 3,
+                      backgroundColor: 'action.hover',
+                    }}
+                  >
+                    <Typography variant="body2">{msg.text}</Typography>
+                  </Paper>
+                  <Box sx={{ display: 'flex', flexDirection: mobileDevice ? 'column' : 'row', ml: 1, mt: 0.5, gap: 0.5 }}>
+                    <Tooltip title="Play">
+                      <IconButton size="small">
+                        <PlayArrowIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Translate">
+                      <IconButton size="small">
+                        <TranslateIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </>
+              )}
+              {msg.role === 'user' && (
+                <>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      maxWidth: '75%',
+                      borderRadius: 3,
+                      backgroundColor: 'primary.main',
+                      color: 'primary.contrastText',
+                    }}
+                  >
+                    <Typography variant="body2">{msg.text}</Typography>
+                  </Paper>
+                  <Box sx={{ display: 'flex', flexDirection: mobileDevice ? 'column' : 'row', ml: 1, mt: 0.5, gap: 0.5 }}>
+                    <Tooltip title="Play">
+                      <IconButton size="small">
+                        <PlayArrowIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Translate">
+                      <IconButton size="small">
+                        <TranslateIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </>
+              )}
+            </Box>
+          ))}
+          <div ref={bottomRef} />
+        </Box>
 
-      {/* Input bar */}
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <TextField
-          fullWidth
-          size="small"
-          placeholder="Aa"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 6 } }}
-        />
-        <IconButton
-          color="primary"
-          onClick={handleSend}
+        {/* Input bar */}
+        <Box
           sx={{
-            backgroundColor: 'primary.main',
-            color: 'primary.contrastText',
-            '&:hover': { backgroundColor: 'primary.dark' },
+            px: 3,
+            py: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            flexShrink: 0,
           }}
         >
-          <MicIcon />
-        </IconButton>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Aa"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 6 } }}
+          />
+          <IconButton
+            color="primary"
+            onClick={handleSend}
+            sx={{
+              backgroundColor: 'primary.main',
+              color: 'primary.contrastText',
+              '&:hover': { backgroundColor: 'primary.dark' },
+            }}
+          >
+            <MicIcon />
+          </IconButton>
+        </Box>
       </Box>
-    </Box>
+    </Layout>
   );
 }
 
