@@ -1,3 +1,20 @@
+import { auth } from '@clerk/nextjs/server';
+
 export async function GET() {
-  return Response.json({ token: process.env.NEXT_PUBLIC_VOICELIVE_API_KEY_1 });
+  const { userId } = await auth();
+
+  if (!userId) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const token = process.env.VOICELIVE_SOCKET_SECRET;
+
+  if (!token) {
+    return Response.json(
+      { error: 'Voice service is not configured' },
+      { status: 503 }
+    );
+  }
+
+  return Response.json({ token });
 }

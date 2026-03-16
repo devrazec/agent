@@ -14,15 +14,17 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl);
   });
 
+  const allowedOrigin = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
   const io = new SocketIOServer(httpServer, {
     path: '/api/voice',
-    cors: { origin: '*' },
+    cors: { origin: allowedOrigin, methods: ['GET', 'POST'] },
   });
 
-  // Auth middleware
+  // Auth middleware — validates the per-request socket secret (not the Azure API key)
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
-    if (token !== process.env.NEXT_PUBLIC_VOICELIVE_API_KEY_1) {
+    if (!token || token !== process.env.VOICELIVE_SOCKET_SECRET) {
       return next(new Error('Unauthorized'));
     }
     next();
