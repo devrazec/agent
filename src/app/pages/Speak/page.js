@@ -54,7 +54,10 @@ export default function SpeakPage() {
   }, []);
 
   const addMessage = useCallback((role, text) => {
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role, text }]);
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    setMessages((prev) => [...prev, { id, role, text }]);
   }, []);
 
   const connectSession = useCallback(async () => {
@@ -64,68 +67,79 @@ export default function SpeakPage() {
     setStatus('connecting');
     setError(null);
 
-    const res = await fetch('/api/voice-token');
-    const { token } = await res.json();
+    try {
+      const res = await fetch('/api/voice-token');
+      const body = await res.json();
+      if (!res.ok) {
+        setError(body.error || 'Failed to authenticate');
+        setStatus('error');
+        return;
+      }
+      const { token } = body;
 
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
 
-    const socket = io(socketUrl, {
-      path: '/api/voice',
-      auth: { token },
-    });
-
-    socketRef.current = socket;
-
-    socket.on('connect', () => {
-      console.log('Socket.io connected');
-    });
-
-    socket.on('connect_error', (err) => {
-      setError(err.message);
-      setStatus('error');
-      socketRef.current?.disconnect();
-      socketRef.current = null;
-    });
-
-    socket.on('disconnect', () => {
-      setStatus('idle');
-      setError(null);
-      audioRef.current?.stop();
-      audioRef.current = null;
-    });
-
-    socket.on('session_ready', async ({ agentName }) => {
-      setStatus('ready');
-      addMessage('system', `Connected to agent: ${agentName}`);
-      audioRef.current = new BrowserAudioProcessor((base64) => {
-        socket.emit('audio_chunk', { audio: base64 });
+      const socket = io(socketUrl, {
+        path: '/api/voice',
+        auth: { token },
       });
-      await audioRef.current.startCapture();
-    });
 
-    socket.on('speech_started', () => {
-      setStatus('listening');
-      audioRef.current?.clearPlaybackQueue();
-    });
+      socketRef.current = socket;
 
-    socket.on('speech_stopped', () => setStatus('thinking'));
+      socket.on('connect', () => {
+        console.log('Socket.io connected');
+      });
 
-    socket.on('user_transcript', ({ text }) => addMessage('user', text));
+      socket.on('connect_error', (err) => {
+        setError(err.message);
+        setStatus('error');
+        socketRef.current?.disconnect();
+        socketRef.current = null;
+      });
 
-    socket.on('agent_transcript', ({ text }) => addMessage('assistant', text));
+      socket.on('disconnect', () => {
+        setStatus('idle');
+        setError(null);
+        audioRef.current?.stop();
+        audioRef.current = null;
+      });
 
-    // Synchronous — let queueAudio handle async internally
-    socket.on('audio_delta', ({ delta }) => {
-      setStatus('speaking');
-      audioRef.current?.queueAudio(delta);
-    });
+      socket.on('session_ready', async ({ agentName }) => {
+        setStatus('ready');
+        addMessage('system', `Connected to agent: ${agentName}`);
+        audioRef.current = new BrowserAudioProcessor((base64) => {
+          socket.emit('audio_chunk', { audio: base64 });
+        });
+        await audioRef.current.startCapture();
+      });
 
-    socket.on('audio_done', () => setStatus('ready'));
+      socket.on('speech_started', () => {
+        setStatus('listening');
+        audioRef.current?.clearPlaybackQueue();
+      });
 
-    socket.on('voice_error', ({ message }) => {
-      setError(message);
+      socket.on('speech_stopped', () => setStatus('thinking'));
+
+      socket.on('user_transcript', ({ text }) => addMessage('user', text));
+
+      socket.on('agent_transcript', ({ text }) => addMessage('assistant', text));
+
+      // queueAudio is synchronous — audio is scheduled via Web Audio API
+      socket.on('audio_delta', ({ delta }) => {
+        setStatus('speaking');
+        audioRef.current?.queueAudio(delta);
+      });
+
+      socket.on('audio_done', () => setStatus('ready'));
+
+      socket.on('voice_error', ({ message }) => {
+        setError(message);
+        setStatus('error');
+      });
+    } catch (err) {
+      setError(err.message || 'Failed to connect');
       setStatus('error');
-    });
+    }
   }, [addMessage]);
 
   const disconnectSession = useCallback(() => {

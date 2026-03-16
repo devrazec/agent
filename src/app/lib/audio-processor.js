@@ -4,8 +4,8 @@ export class BrowserAudioProcessor {
     this.audioContext = null;
     this.mediaStream = null;
     this.scriptProcessor = null;
-    this.playbackQueue = [];
-    this.isPlaying = false;
+    // Scheduled playback — tracks the next available start time in the AudioContext timeline
+    this._nextPlayTime = 0;
   }
 
   async startCapture() {
@@ -28,26 +28,34 @@ export class BrowserAudioProcessor {
     this.scriptProcessor.connect(this.audioContext.destination);
   }
 
-  async queueAudio(base64) {
+  /**
+   * Queues a base64-encoded PCM16 audio chunk for gapless playback using the
+   * Web Audio API's scheduled-start mechanism. Each buffer is started exactly
+   * when the previous one ends, eliminating the gaps introduced by awaiting
+   * Promise-based sequential playback.
+   */
+  queueAudio(base64) {
     if (!this.audioContext) return;
+
     const pcm = base64ToArrayBuffer(base64);
     const audioBuffer = pcm16ToAudioBuffer(pcm, this.audioContext);
-    this.playbackQueue.push(audioBuffer);
-    if (!this.isPlaying) this.drainQueue();
-  }
 
-  async drainQueue() {
-    if (!this.audioContext) return;
-    this.isPlaying = true;
-    while (this.playbackQueue.length > 0) {
-      const buffer = this.playbackQueue.shift();
-      await playBuffer(this.audioContext, buffer);
-    }
-    this.isPlaying = false;
+    const source = this.audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(this.audioContext.destination);
+
+    const now = this.audioContext.currentTime;
+    // If the schedule has fallen behind real time, reset to now
+    if (this._nextPlayTime < now) this._nextPlayTime = now;
+
+    source.start(this._nextPlayTime);
+    this._nextPlayTime += audioBuffer.duration;
   }
 
   clearPlaybackQueue() {
-    this.playbackQueue = [];
+    // Reset the schedule baseline; the next queued chunk will use AudioContext.currentTime
+    // as the start point (see the `if (_nextPlayTime < now)` guard in queueAudio).
+    this._nextPlayTime = 0;
   }
 
   stop() {
@@ -55,6 +63,7 @@ export class BrowserAudioProcessor {
     this.mediaStream?.getTracks().forEach((t) => t.stop());
     this.audioContext?.close();
     this.audioContext = null;
+    this._nextPlayTime = 0;
   }
 }
 
@@ -71,7 +80,7 @@ function float32ToPcm16(float32) {
 
 function arrayBufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
-  let binary = "";
+  let binary = '';
   bytes.forEach((b) => (binary += String.fromCharCode(b)));
   return btoa(binary);
 }
@@ -90,14 +99,4 @@ function pcm16ToAudioBuffer(pcm, ctx) {
   const audioBuffer = ctx.createBuffer(1, float32.length, 24000);
   audioBuffer.copyToChannel(float32, 0);
   return audioBuffer;
-}
-
-function playBuffer(ctx, buffer) {
-  return new Promise((resolve) => {
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(ctx.destination);
-    source.onended = resolve;
-    source.start();
-  });
 }

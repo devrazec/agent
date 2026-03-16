@@ -1,6 +1,5 @@
 import {
   VoiceLiveClient,
-  KnownServerEventType,
   KnownInputAudioFormat,
   KnownOutputAudioFormat,
   KnownModality,
@@ -12,31 +11,31 @@ export async function createVoiceLiveProxy(socket) {
   const credential = new AzureKeyCredential(process.env.AZURE_VOICELIVE_API_KEY_1);
 
   const client = new VoiceLiveClient(
-    process.env.AZURE_VOICELIVE_ENDPOINT,        // no NEXT_PUBLIC_ prefix
+    process.env.AZURE_VOICELIVE_ENDPOINT,
     credential,
-    { apiVersion: '2026-01-01-preview' }
   );
 
+  // Session config uses camelCase property names — the SDK serialises them to
+  // snake_case before sending to the service. Passing snake_case directly would
+  // leave those fields undefined in the TypeScript model and they would be dropped.
   const sessionConfig = {
-    model: process.env.AZURE_VOICELIVE_MODEL,    // no NEXT_PUBLIC_ prefix
+    model: process.env.AZURE_VOICELIVE_MODEL,
     modalities: [KnownModality.Text, KnownModality.Audio],
-    input_audio_format: KnownInputAudioFormat.Pcm16,
-    output_audio_format: KnownOutputAudioFormat.Pcm16,
-    turn_detection: {
+    inputAudioFormat: KnownInputAudioFormat.Pcm16,
+    outputAudioFormat: KnownOutputAudioFormat.Pcm16,
+    turnDetection: {
       type: KnownTurnDetectionType.AzureSemanticVad,
-      end_of_utterance_detection: {
+      endOfUtteranceDetection: {
         model: 'semantic_detection_v1_multilingual',
       },
     },
-    input_audio_echo_cancellation: { type: 'server_echo_cancellation' },
-    input_audio_noise_reduction: { type: 'azure_deep_noise_suppression' },
+    inputAudioEchoCancellation: { type: 'server_echo_cancellation' },
+    inputAudioNoiseReduction: { type: 'azure_deep_noise_suppression' },
   };
 
   let session;
   try {
-    session = await client.startSession(sessionConfig, {
-      agentConnectionString: process.env.AZURE_VOICELIVE_CONNECTION_STRING, // no NEXT_PUBLIC_
-    });
+    session = await client.startSession(sessionConfig);
   } catch (err) {
     console.error('Failed to start VoiceLive session:', err);
     socket.emit('voice_error', { message: 'Failed to connect to Azure VoiceLive' });
@@ -46,28 +45,28 @@ export async function createVoiceLiveProxy(socket) {
 
   // ── Azure → browser ───────────────────────────────────────────────────────
   const subscription = session.subscribe({
-    onSessionUpdated: (event) => {
+    onSessionUpdated: async (event) => {
       socket.emit('session_ready', { agentName: event.session?.agent?.name ?? 'Agent' });
     },
-    onConversationItemInputAudioTranscriptionCompleted: (event) => {
+    onConversationItemInputAudioTranscriptionCompleted: async (event) => {
       socket.emit('user_transcript', { text: event.transcript ?? '' });
     },
-    onResponseAudioTranscriptDone: (event) => {
+    onResponseAudioTranscriptDone: async (event) => {
       socket.emit('agent_transcript', { text: event.transcript ?? '' });
     },
-    onResponseAudioDelta: (event) => {
+    onResponseAudioDelta: async (event) => {
       socket.emit('audio_delta', { delta: event.delta });
     },
-    onResponseAudioDone: () => {
+    onResponseAudioDone: async () => {
       socket.emit('audio_done');
     },
-    onInputAudioBufferSpeechStarted: () => {
+    onInputAudioBufferSpeechStarted: async () => {
       socket.emit('speech_started');
     },
-    onInputAudioBufferSpeechStopped: () => {
+    onInputAudioBufferSpeechStopped: async () => {
       socket.emit('speech_stopped');
     },
-    onError: (event) => {
+    onError: async (event) => {
       socket.emit('voice_error', { message: event.error?.message ?? 'Unknown error' });
     },
   });
@@ -83,7 +82,8 @@ export async function createVoiceLiveProxy(socket) {
 
   // ── Cleanup ───────────────────────────────────────────────────────────────
   socket.on('disconnect', async () => {
-    subscription?.unsubscribe?.();
+    // VoiceLiveSubscription exposes .close() for cleanup
+    await subscription?.close?.();
     try {
       await session.disconnect();
     } catch (err) {
