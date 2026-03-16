@@ -57,6 +57,11 @@ npm remove @vercel/speed-insights
 npm i -S @azure/ai-voicelive
 npm i -S @azure/core-auth
 npm i -S @azure/identity
+npm i -S @azure/ai-projects
+
+-- Socket
+
+npm i -S socket.io socket.io-client
 
 ```
 
