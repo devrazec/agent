@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useContext, useCallback } from 'react';
-import { io } from 'socket.io-client';
 import { GlobalContext } from '../../context/GlobalContext';
-import { BrowserAudioProcessor } from '../../lib/audio-processor';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -19,143 +17,72 @@ import Layout from '../../components/Layout';
 
 const BOTTOM_NAV_HEIGHT = 56;
 
-const STATUS_CONFIG = {
-  idle:       { label: 'Idle',        color: 'default'   },
-  connecting: { label: 'Connecting…', color: 'warning'   },
-  ready:      { label: 'Ready',       color: 'success'   },
-  listening:  { label: 'Listening',   color: 'info'      },
-  thinking:   { label: 'Thinking…',   color: 'warning'   },
-  speaking:   { label: 'Speaking',    color: 'secondary' },
-  error:      { label: 'Error',       color: 'error'     },
-};
-
 export default function SpeakPage() {
-  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [status, setStatus] = useState('idle');
-  const [error, setError] = useState(null);
 
   const bottomRef = useRef(null);
-  const socketRef = useRef(null);
-  const audioRef = useRef(null);
 
   const { mobileDevice } = useContext(GlobalContext);
+
+  const initialMessages = [
+    {
+      id: 1,
+      role: 'assistant',
+      text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+    },
+    {
+      id: 2,
+      role: 'user',
+      text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+    },
+    {
+      id: 3,
+      role: 'assistant',
+      text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+    },
+    {
+      id: 4,
+      role: 'assistant',
+      text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+    },
+    {
+      id: 5,
+      role: 'user',
+      text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+    },
+    {
+      id: 6,
+      role: 'assistant',
+      text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+    },
+    {
+      id: 7,
+      role: 'user',
+      text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+    },
+    {
+      id: 8,
+      role: 'user',
+      text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+    },
+    {
+      id: 9,
+      role: 'assistant',
+      text: "Ah, good morning, Alex. Please, have a seat. I'm eager to hear your vision for launching the 'ChronoSync' device.",
+    },
+  ];
+  const [messages, setMessages] = useState(initialMessages);
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      socketRef.current?.disconnect();
-      audioRef.current?.stop();
-    };
-  }, []);
-
-  const addMessage = useCallback((role, text) => {
-    const id = typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    setMessages((prev) => [...prev, { id, role, text }]);
-  }, []);
-
-  const connectSession = useCallback(async () => {
-    // Guard against duplicate connections
-    if (socketRef.current?.connected) return;
-
-    setStatus('connecting');
-    setError(null);
-
-    try {
-      const res = await fetch('/api/voice-token');
-      const body = await res.json();
-      if (!res.ok) {
-        setError(body.error || 'Failed to authenticate');
-        setStatus('error');
-        return;
-      }
-      const { token } = body;
-
-      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
-
-      const socket = io(socketUrl, {
-        path: '/api/voice',
-        auth: { token },
-      });
-
-      socketRef.current = socket;
-
-      socket.on('connect', () => {
-        console.log('Socket.io connected');
-      });
-
-      socket.on('connect_error', (err) => {
-        setError(err.message);
-        setStatus('error');
-        socketRef.current?.disconnect();
-        socketRef.current = null;
-      });
-
-      socket.on('disconnect', () => {
-        setStatus('idle');
-        setError(null);
-        audioRef.current?.stop();
-        audioRef.current = null;
-      });
-
-      socket.on('session_ready', async ({ agentName }) => {
-        setStatus('ready');
-        addMessage('system', `Connected to agent: ${agentName}`);
-        audioRef.current = new BrowserAudioProcessor((base64) => {
-          socket.emit('audio_chunk', { audio: base64 });
-        });
-        await audioRef.current.startCapture();
-      });
-
-      socket.on('speech_started', () => {
-        setStatus('listening');
-        audioRef.current?.clearPlaybackQueue();
-      });
-
-      socket.on('speech_stopped', () => setStatus('thinking'));
-
-      socket.on('user_transcript', ({ text }) => addMessage('user', text));
-
-      socket.on('agent_transcript', ({ text }) => addMessage('assistant', text));
-
-      // queueAudio is synchronous — audio is scheduled via Web Audio API
-      socket.on('audio_delta', ({ delta }) => {
-        setStatus('speaking');
-        audioRef.current?.queueAudio(delta);
-      });
-
-      socket.on('audio_done', () => setStatus('ready'));
-
-      socket.on('voice_error', ({ message }) => {
-        setError(message);
-        setStatus('error');
-      });
-    } catch (err) {
-      setError(err.message || 'Failed to connect');
-      setStatus('error');
-    }
-  }, [addMessage]);
-
-  const disconnectSession = useCallback(() => {
-    socketRef.current?.disconnect();
-    socketRef.current = null;
-    audioRef.current?.stop();
-    audioRef.current = null;
-    setStatus('idle');
-    setError(null);
-  }, []);
-
   const handleSend = () => {
     const text = input.trim();
     if (!text) return;
-    addMessage('user', text);
-    socketRef.current?.emit('text_input', { text });
+    const newMessage = { id: Date.now(), role: 'user', text };
+    setMessages((prev) => [...prev, newMessage]);
     setInput('');
   };
 
@@ -165,10 +92,6 @@ export default function SpeakPage() {
       handleSend();
     }
   };
-
-  const isConnected = status !== 'idle' && status !== 'error';
-  const isConnecting = status === 'connecting';
-  const { label: statusLabel, color: statusColor } = STATUS_CONFIG[status];
 
   return (
     <Layout>
@@ -186,13 +109,7 @@ export default function SpeakPage() {
             borderColor: 'divider',
           }}
         >
-          <Chip label={statusLabel} color={statusColor} size="small" />
-          {error && (
-            <Typography variant="caption" color="error">
-              {error}
-            </Typography>
-          )}
-        </Box>
+</Box>
 
         {/* ── Messages area ── */}
         <Box
@@ -227,18 +144,17 @@ export default function SpeakPage() {
               );
             }
 
-            const isUser = msg.role === 'user';
             return (
               <Box
                 key={msg.id}
                 sx={{
                   display: 'flex',
                   alignItems: 'flex-start',
-                  justifyContent: isUser ? 'flex-end' : 'flex-start',
+                  justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
                   mb: 2,
                 }}
               >
-                {!isUser && (
+                {msg.role !== 'user' && (
                   <>
                     <Paper
                       elevation={0}
@@ -275,7 +191,7 @@ export default function SpeakPage() {
                   </>
                 )}
 
-                {isUser && (
+                {msg.role === 'user' && (
                   <>
                     <Paper
                       elevation={0}
@@ -341,12 +257,10 @@ export default function SpeakPage() {
             disabled={!isConnected}
             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 6 } }}
           />
-          <Tooltip title={isConnecting ? 'Connecting…' : isConnected ? 'End session' : 'Start session'}>
+          <Tooltip title={isConnected ? 'End session' : 'Start session'}>
             <span>
               <IconButton
-                disabled={isConnecting}
                 color={isConnected ? 'error' : 'primary'}
-                onClick={isConnected ? disconnectSession : connectSession}
                 sx={{
                   backgroundColor: isConnected ? 'error.main' : 'primary.main',
                   color: 'primary.contrastText',
@@ -358,12 +272,7 @@ export default function SpeakPage() {
                   },
                 }}
               >
-                {isConnecting
-                  ? <MicIcon sx={{ opacity: 0.5 }} />
-                  : isConnected
-                    ? <MicOffIcon />
-                    : <MicIcon />
-                }
+                {isConnected ? <MicOffIcon /> : <MicIcon />}
               </IconButton>
             </span>
           </Tooltip>

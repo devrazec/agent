@@ -38,7 +38,7 @@ export default function Content({ children }) {
             Dashboard
           </Typography>
           <Grid container spacing={3}>
-            {['Overview', 'Activity', 'Reports', 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks' , 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks',, 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks', , 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks',, 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks', 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks', 'Tasks', 'Overview', 'Activity', 'Reports', 'Tasks', 'Activity', 'Reports', 'Tasks'].map((title) => (
+            {['Overview', 'Activity', 'Reports', 'Tasks'].map((title) => (
               <Grid key={title} size={{ xs: 12, sm: 6, md: 3 }}>
                 <Paper sx={{ p: 3, borderRadius: 2 }} elevation={1}>
                   <Typography variant="subtitle1" fontWeight={500}>
