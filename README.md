@@ -52,16 +52,17 @@ npm i -S @vercel/analytics
 
 npm remove @vercel/speed-insights
 
+-- Azure Pronunciation Assessment
+
+npm i -S microsoft-cognitiveservices-speech-sdk
+
 -- Azure Voice Live Universal Assistant
 
-npm i -S @azure/ai-voicelive
-npm i -S @azure/core-auth
-npm i -S @azure/identity
-npm i -S @azure/ai-projects
+npm remove @azure/ai-voicelive @azure/core-auth @azure/identity @azure/ai-projects
 
 -- Socket
 
-npm i -S socket.io socket.io-client
+npm remove socket.io socket.io-client
 
 ```
 
